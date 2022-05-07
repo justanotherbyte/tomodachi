@@ -1,8 +1,12 @@
 
 use pyo3::prelude::*;
 use tts::*;
-use std::thread;
-use std::time::Duration;
+use std::{
+    thread,
+    time::Duration
+};
+
+mod record;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -12,7 +16,7 @@ fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 
 #[pyfunction]
 fn speak(text: String) -> PyResult<()> {
-    let mut tts = Tts::default().unwrap();
+    let mut tts = Tts::default().expect("Failed to initialize tts");
     let Features {
         utterance_callbacks,
         ..
@@ -32,7 +36,7 @@ fn speak(text: String) -> PyResult<()> {
 
     tts.set_volume(1.0).unwrap();
     tts.speak(text, true).unwrap();
-    
+
     thread::sleep(Duration::from_secs(3));
 
     Ok(())
@@ -42,5 +46,6 @@ fn speak(text: String) -> PyResult<()> {
 fn voice(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     m.add_function(wrap_pyfunction!(speak, m)?)?;
+    m.add_function(wrap_pyfunction!(record::record_audio, m)?)?;
     Ok(())
 }

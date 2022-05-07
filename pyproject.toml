@@ -14,6 +14,7 @@ poethepoet = "^0.13.1"
 
 [tool.poe.tasks]
 test = "poetry run pytest"
+itest = "py tomodachi/itests.py"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

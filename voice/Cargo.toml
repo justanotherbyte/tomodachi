@@ -11,3 +11,5 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.16.3", features = ["extension-module"] }
 tts = "0.21.1"
+cpal = "0.13.5"
+hound = "3.4.0"
