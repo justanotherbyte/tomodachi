@@ -4,21 +4,17 @@ in a seperate file
 */
 
 use cpal::{
-    traits::{HostTrait, DeviceTrait, StreamTrait},
-    StreamError
+    traits::{DeviceTrait, HostTrait, StreamTrait},
+    StreamError,
 };
-use pyo3::{
-    pyfunction,
-    PyResult
-};
+use pyo3::{pyfunction, PyResult};
 use std::{
+    fs::File,
+    io::BufWriter,
+    sync::{Arc, Mutex},
     thread,
     time::Duration,
-    sync::{Arc, Mutex},
-    io::BufWriter,
-    fs::File
 };
-
 
 // https://github.com/RustAudio/cpal/blob/b1457e5945cfeb136b7b04c8870b63c2ae3f2212/examples/record_wav.rs#L142-L148
 fn sample_format(format: cpal::SampleFormat) -> hound::SampleFormat {
@@ -60,10 +56,10 @@ where
 #[pyfunction]
 pub fn record_audio(fp: String, seconds: u64) -> PyResult<()> {
     let host = cpal::default_host();
-    let device = host.default_input_device()
-        .expect("No input device");
+    let device = host.default_input_device().expect("No input device");
 
-    let supported_stream_config = device.default_input_config()
+    let supported_stream_config = device
+        .default_input_config()
         .expect("Failed to build default input config");
     let config = supported_stream_config.config();
 
@@ -71,8 +67,7 @@ pub fn record_audio(fp: String, seconds: u64) -> PyResult<()> {
 
     let wav_spec = wav_spec_from_config(&supported_stream_config);
 
-    let writer = hound::WavWriter::create(fp, wav_spec)
-        .expect("Failed to create WavWriter");
+    let writer = hound::WavWriter::create(fp, wav_spec).expect("Failed to create WavWriter");
     let writer = Arc::new(Mutex::new(Some(writer)));
     let writer_2 = writer; // clone occurs here
 
@@ -83,28 +78,32 @@ pub fn record_audio(fp: String, seconds: u64) -> PyResult<()> {
     println!("Started to record...");
 
     let stream = match supported_stream_config.sample_format() {
-        cpal::SampleFormat::F32 => device.build_input_stream(
-            &config,
-            move |data, _: &_| write_input_data::<f32, f32>(data, &writer_2),
-            err_fn,
-        ).expect("Failed to build input stream"),
-        cpal::SampleFormat::I16 => device.build_input_stream(
-            &config,
-            move |data, _: &_| write_input_data::<i16, i16>(data, &writer_2),
-            err_fn,
-        ).expect("Failed to build input stream"),
-        cpal::SampleFormat::U16 => device.build_input_stream(
-            &config,
-            move |data, _: &_| write_input_data::<u16, i16>(data, &writer_2),
-            err_fn,
-        ).expect("Failed to build input stream"),
+        cpal::SampleFormat::F32 => device
+            .build_input_stream(
+                &config,
+                move |data, _: &_| write_input_data::<f32, f32>(data, &writer_2),
+                err_fn,
+            )
+            .expect("Failed to build input stream"),
+        cpal::SampleFormat::I16 => device
+            .build_input_stream(
+                &config,
+                move |data, _: &_| write_input_data::<i16, i16>(data, &writer_2),
+                err_fn,
+            )
+            .expect("Failed to build input stream"),
+        cpal::SampleFormat::U16 => device
+            .build_input_stream(
+                &config,
+                move |data, _: &_| write_input_data::<u16, i16>(data, &writer_2),
+                err_fn,
+            )
+            .expect("Failed to build input stream"),
     };
 
-    stream.play()
-        .unwrap();
-    
-    thread::sleep(Duration::from_secs(seconds));
+    stream.play().unwrap();
 
+    thread::sleep(Duration::from_secs(seconds));
 
     Ok(())
 }

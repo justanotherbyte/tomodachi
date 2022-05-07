@@ -1,10 +1,6 @@
-
 use pyo3::prelude::*;
+use std::{thread, time::Duration};
 use tts::*;
-use std::{
-    thread,
-    time::Duration
-};
 
 mod record;
 
@@ -25,13 +21,16 @@ fn speak(text: String) -> PyResult<()> {
     if utterance_callbacks {
         tts.on_utterance_begin(Some(Box::new(|utterance| {
             println!("Started speaking {:?}", utterance)
-        }))).unwrap();
+        })))
+        .unwrap();
         tts.on_utterance_end(Some(Box::new(|utterance| {
             println!("Finished speaking {:?}", utterance)
-        }))).unwrap();
+        })))
+        .unwrap();
         tts.on_utterance_stop(Some(Box::new(|utterance| {
             println!("Stopped speaking {:?}", utterance)
-        }))).unwrap();
+        })))
+        .unwrap();
     }
 
     tts.set_volume(1.0).unwrap();
