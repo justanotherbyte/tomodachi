@@ -1,3 +1,4 @@
 .pytest_cache
 poetry.lock
 __pycache__/
+*.wav
